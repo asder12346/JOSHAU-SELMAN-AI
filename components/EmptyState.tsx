@@ -7,10 +7,10 @@ interface EmptyStateProps {
 
 const EmptyState: React.FC<EmptyStateProps> = ({ onSuggestedClick }) => {
   const suggestions = [
-    { title: "KINGDOM LAWS", text: "Explain the biblical law of service and honor." },
-    { title: "PERSONAL GROWTH", text: "How do I discover my God-given purpose?" },
-    { title: "PRAYER LIFE", text: "Apostle Joshua Selman's teaching on effective, results-driven prayer." },
-    { title: "DIVINE FAVOR", text: "Understanding the mystery of the favor of God." }
+    { title: "THE WHY OF PRAYER", text: "Why does the Apostle teach that prayer is essential for the believer?" },
+    { title: "LOCATE TEACHING", text: "Where can I find Apostle Selman's teaching on the Law of Honor?" },
+    { title: "KINGDOM PRINCIPLES", text: "What are the core reasons the Apostle gives for the necessity of service?" },
+    { title: "SPIRITUAL DEPTH", text: "Explain the Apostle's perspective on the mystery of divine favor." }
   ];
 
   return (
@@ -20,7 +20,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onSuggestedClick }) => {
           <button
             key={i}
             onClick={() => onSuggestedClick(s.text)}
-            className="group relative text-left p-8 bg-[#262626] border border-[#333333] rounded-[1.5rem] transition-all hover:bg-[#2D2D2D] active:scale-[0.98]"
+            className="group relative text-left p-8 bg-[#262626] border border-[#333333] rounded-[1.5rem] transition-all hover:bg-[#2D2D2D] active:scale-[0.98] border-l-4 border-l-transparent hover:border-l-red-600"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-[10px] font-bold text-slate-300 bg-[#1E1E1E] px-3 py-1.5 rounded-lg uppercase tracking-widest">
