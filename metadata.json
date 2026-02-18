@@ -1,0 +1,5 @@
+{
+  "name": "Ask Apostle Joshua Selman",
+  "description": "An AI assistant that answers questions strictly based on Apostle Joshua Selman’s teachings using a verified sermon knowledge base via Google Search grounding.",
+  "requestFramePermissions": []
+}
