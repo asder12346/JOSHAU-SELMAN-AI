@@ -108,7 +108,7 @@ const App: React.FC = () => {
                 <div className="flex flex-row gap-5">
                   <div className="w-11 h-11 rounded-2xl bg-black border border-[#262626] flex items-center justify-center shadow-xl overflow-hidden shrink-0">
                     <img 
-                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf0I7F1yB-f-pA1i8WnL8R3D6F-k9G9I6J-A&s" 
+                      src="https://i.postimg.cc/vH0rN5K5/koinonia-logo.jpg" 
                       alt="Koinonia" 
                       className="w-full h-full object-cover opacity-60 grayscale animate-pulse"
                     />

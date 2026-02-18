@@ -10,25 +10,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.role === MessageRole.USER;
   const isSystem = message.role === MessageRole.SYSTEM_NOTICE;
 
-  // Make links clickable within text and ensure no asterisks are rendered
-  const renderContent = (text: string) => {
-    // Sanitize text to remove any accidental asterisks the model might have sent
-    const sanitizedText = text.replace(/\*/g, '');
-    
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = sanitizedText.split(urlRegex);
-    return parts.map((part, i) => {
-      if (part.match(urlRegex)) {
-        return (
-          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-red-400 font-bold underline break-all hover:text-red-300 transition-colors">
-            {part}
-          </a>
-        );
-      }
-      return part;
-    });
-  };
-
   if (isSystem) {
     return (
       <div className="flex justify-center my-8">
@@ -39,6 +20,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       </div>
     );
   }
+
+  const youtubeSource = message.sources?.find(s => s.uri.includes('youtube') || s.uri.includes('youtu.be'));
+  const audioSource = message.sources?.find(s => !s.uri.includes('youtube') && !s.uri.includes('youtu.be'));
 
   return (
     <div className={`flex w-full mb-10 ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
@@ -55,56 +39,62 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             </svg>
           ) : (
             <img 
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf0I7F1yB-f-pA1i8WnL8R3D6F-k9G9I6J-A&s" 
+              src="https://i.postimg.cc/vH0rN5K5/koinonia-logo.jpg" 
               alt="Koinonia" 
               className="w-full h-full object-cover"
             />
           )}
         </div>
 
-        {/* Bubble */}
+        {/* Message Content */}
         <div className={`flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}>
-          <div className={`px-7 py-6 rounded-[1.8rem] transition-all shadow-2xl ${
+          <div className={`px-7 py-7 rounded-[2rem] transition-all shadow-2xl ${
             isUser 
               ? 'bg-[#2D2D2D] text-white border border-[#3D3D3D] rounded-tr-none' 
               : 'bg-[#212121] text-[#E2E8F0] rounded-tl-none border border-[#2D2D2D]'
           }`}>
-            <div className="whitespace-pre-wrap leading-[1.8] text-[17px] tracking-tight font-normal">
-              {renderContent(message.content)}
+            {/* Exposition Text */}
+            <div className="whitespace-pre-wrap leading-[1.8] text-[17px] tracking-tight font-normal text-slate-200">
+              {message.content}
             </div>
             
-            {/* YouTube Clickable Source Buttons */}
-            {!isUser && message.sources && message.sources.length > 0 && (
-              <div className="mt-8 pt-7 border-t border-[#333333]/50 w-full flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></div>
-                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.25em]">
-                    CLICK BELOW TO WATCH SERMON ON YOUTUBE
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {message.sources.map((source, idx) => (
-                    <a
-                      key={idx}
-                      href={source.uri}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-4 px-6 py-5 bg-[#1A1A1A] border-2 border-red-600/20 rounded-[1.2rem] text-slate-200 transition-all hover:bg-black hover:border-red-600 hover:shadow-[0_0_20px_rgba(220,38,38,0.2)] active:scale-[0.98] group"
-                    >
-                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-600 flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110">
-                        <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"></path>
-                        </svg>
+            {/* Sermon Resource Section - Only shown if real data exists */}
+            {!isUser && youtubeSource && (
+              <div className="mt-8 pt-8 border-t border-[#333333]">
+                <div className="bg-[#1A1A1A] rounded-[1.5rem] border border-[#333333] p-6 group hover:border-red-600/30 transition-all">
+                   <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 pr-4">
+                        <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em] mb-1 block">Verified Resource</span>
+                        <h4 className="text-[15px] font-bold text-white leading-tight uppercase tracking-tight">{youtubeSource.title}</h4>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="block truncate font-bold text-[15px] text-white group-hover:text-red-400 transition-colors uppercase tracking-tight">{source.title}</span>
-                        <span className="block text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1">Sermon Archive • YouTube</span>
+                      <div className="w-10 h-10 rounded-full bg-red-600/10 flex items-center justify-center text-red-600">
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
                       </div>
-                      <svg className="w-5 h-5 text-slate-600 group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                      </svg>
-                    </a>
-                  ))}
+                   </div>
+
+                   <div className="flex flex-col sm:flex-row gap-3">
+                      <a 
+                        href={youtubeSource.uri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-3 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all shadow-lg active:scale-95 overflow-hidden relative"
+                      >
+                        <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        <span className="text-[12px] font-black uppercase tracking-widest">Watch on YouTube</span>
+                      </a>
+
+                      {audioSource && (
+                        <a 
+                          href={audioSource.uri}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-3 py-4 px-6 bg-[#333333] hover:bg-[#444444] text-white rounded-xl transition-all active:scale-95"
+                        >
+                          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                          <span className="text-[12px] font-black uppercase tracking-widest">Audio</span>
+                        </a>
+                      )}
+                   </div>
                 </div>
               </div>
             )}

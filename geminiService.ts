@@ -5,27 +5,20 @@ import { Message, MessageRole, SourceReference } from "./types";
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 const SYSTEM_INSTRUCTION = `
-You are the official AI guide for the teachings of Apostle Joshua Selman and Koinonia Global. 
+You are the verified Research Assistant for the archives of Apostle Joshua Selman and Koinonia Global.
 
-STRICT FORMATTING RULE:
-1. ABSOLUTELY NO ASTERISKS (*) ARE ALLOWED IN YOUR RESPONSE. Do not use them for bolding, italics, lists, or any other reason.
-2. DO NOT use any markdown characters like #, _, -, or >.
-3. Use plain, professional text only.
-4. Separate paragraphs with exactly two line breaks for clarity.
+YOUR CORE MISSION:
+Provide accurate spiritual expositions based on the Apostle's teachings and verify them with REAL, ACTIVE YouTube links from official sources.
 
-CORE BEHAVIOR:
-1. You only provide information explicitly taught by Apostle Joshua Selman in his verified sermons.
-2. If asked for a spiritual action (e.g., "Pray for me", "Prophesy", "Let us pray"), you MUST NOT perform the act. Instead, you MUST explain the Apostle's teaching on why we pray or the mystery of prayer.
-   - Example response: Apostle Joshua Selman teaches that prayer is a platform for fellowship and a legal means to legislate the will of God on earth. In his teaching [Sermon Title], he explains why every believer must prioritize prayer...
-3. Your goal is to help users locate his teachings and understand the biblical "why" behind practices based on his words.
-4. Never use the word "conning". Always refer to the ministry as "Koinonia".
-
-SOURCE REQUIREMENT:
-Every response must finish by identifying the specific sermon source. You must ensure the source is a valid teaching from Apostle Joshua Selman.
-
-NOT FOUND RESPONSE:
-If the information is not in his archives, respond with:
-"I could not find a specific teaching from Apostle Joshua Selman on this topic within the Koinonia archives. Please rephrase your question to focus on core principles like The Law of Honor or The Power of Service so I can direct you to the correct sermon."
+STRICT OPERATING RULES:
+1. DO NOT HALLUCINATE LINKS. If you do not see a verified YouTube URL in your search results for the specific teaching, DO NOT make one up.
+2. SOURCE VERIFICATION: Use the Google Search tool for every query. Look for channels like "Koinonia Global", "SermonSprout", or "Apostle Joshua Selman" official archives.
+3. FORMATTING: 
+   - Start with a clear, 3-4 paragraph exposition of the teaching.
+   - Do NOT include URLs inside the body of the text.
+   - At the very end of your response, if and only if you found a verified source, write: "SERMON_DATA_START" followed by the Title, YouTube Link, and Audio Link (if found), then "SERMON_DATA_END".
+4. If no specific sermon is found for the exact topic, apologize and suggest a related verified teaching.
+5. NO ASTERISKS. NO MARKDOWN. Use plain, professional English.
 `;
 
 export const sendMessageToGemini = async (
@@ -42,41 +35,43 @@ export const sendMessageToGemini = async (
             role: m.role === MessageRole.USER ? "user" : "model",
             parts: [{ text: m.content }]
           })),
-        { role: "user", parts: [{ text: prompt }] }
+        { role: "user", parts: [{ text: `Search for Apostle Joshua Selman's official teaching on: ${prompt}. Ensure you find the correct YouTube link.` }] }
       ],
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         tools: [{ googleSearch: {} }],
-        temperature: 0.0,
+        temperature: 0.1, // Lower temperature for higher accuracy
       },
     });
 
-    const text = response.text || "I was unable to retrieve the teaching at this time.";
+    let rawText = response.text || "";
+    const sources: SourceReference[] = [];
+    
+    // Extract sources from grounding metadata for reliability
     const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
     const groundingChunks = groundingMetadata?.groundingChunks || [];
     
-    const sourcesMap = new Map<string, SourceReference>();
-    
     groundingChunks.forEach(chunk => {
-      if (chunk.web && chunk.web.uri && chunk.web.title) {
-        const lowerUri = chunk.web.uri.toLowerCase();
-        const lowerTitle = chunk.web.title.toLowerCase();
-        
-        // Strictly prioritize YouTube links related to the Apostle
-        const isYouTube = lowerUri.includes("youtube.com") || lowerUri.includes("youtu.be");
-        const isRelevant = lowerTitle.includes("selman") || lowerTitle.includes("koinonia") || lowerTitle.includes("apostle");
+      if (chunk.web && chunk.web.uri) {
+        const uri = chunk.web.uri;
+        const title = chunk.web.title || "Sermon Archive";
+        const isYouTube = uri.includes("youtube.com") || uri.includes("youtu.be");
+        const isAudio = uri.includes("sermoncloud") || uri.includes("koinoniaglobal.org/sermons");
 
-        if (isYouTube && isRelevant) {
-          sourcesMap.set(chunk.web.uri, {
-            title: chunk.web.title,
-            uri: chunk.web.uri,
+        if (isYouTube || isAudio) {
+          sources.push({
+            title: title.replace(/ - YouTube/g, '').replace(/Apostle Joshua Selman/gi, '').trim(),
+            uri: uri,
             speaker: "Apostle Joshua Selman"
           });
         }
       }
     });
 
-    return { text, sources: Array.from(sourcesMap.values()) };
+    // Clean up the "SERMON_DATA" markers from the text if the model included them
+    const cleanText = rawText.split("SERMON_DATA_START")[0].trim();
+
+    return { text: cleanText, sources };
   } catch (error) {
     console.error("Gemini API Error:", error);
     throw error;

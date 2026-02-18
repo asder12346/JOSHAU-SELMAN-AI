@@ -8,9 +8,9 @@ const Header: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-black border border-[#333333] flex items-center justify-center shadow-lg overflow-hidden">
             <img 
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf0I7F1yB-f-pA1i8WnL8R3D6F-k9G9I6J-A&s" 
+              src="https://i.postimg.cc/vH0rN5K5/koinonia-logo.jpg" 
               alt="Koinonia Logo" 
-              className="w-full h-full object-cover scale-110"
+              className="w-full h-full object-cover"
             />
           </div>
           <div>
